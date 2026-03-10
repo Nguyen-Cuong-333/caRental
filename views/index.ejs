@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarRent Pro — Hệ Thống Quản Lý Cho Thuê Xe</title>
+  <style>
+    /* Fallback font stack - không cần Google Fonts */
+    :root {
+      --font-display: 'Trebuchet MS', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --font-body: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08090d;--surface:#0f1117;--surface2:#161920;--surface3:#1d2028;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#e8ff47;--accent2:#3b82f6;--text:#eef0f4;--muted:#5a6070;
+  --green:#22c55e;--orange:#f97316;--red:#ef4444;--purple:#a855f7;
+  --sw:240px;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  position:fixed;top:0;left:0;width:var(--sw);height:100vh;
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:24px 16px;z-index:200;overflow-y:auto;
+}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:36px;padding:0 6px}
+.logo-mark{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark i{color:#000;font-size:1em}
+.logo-text{font-family:var(--font-display);font-weight:800;font-size:1.1em;letter-spacing:-0.01em;white-space:nowrap;line-height:1.2}
+.logo-text b{color:var(--accent)}
+
+.nav-section{font-size:0.62em;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0 10px;margin:20px 0 8px}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;
+  cursor:pointer;color:var(--muted);font-size:0.9em;font-weight:500;
+  transition:all .18s ease;margin-bottom:2px;border:1px solid transparent;user-select:none;
+}
+.nav-item i{width:17px;text-align:center;font-size:0.9em}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:#000;background:var(--accent);border-color:var(--accent)}
+.nav-item.active i{color:#000}
+
+.sidebar-clock{margin-top:auto;padding:16px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.clock-time{font-family:var(--font-display);font-size:1.45em;font-weight:800;letter-spacing:0}
+.clock-date{font-size:0.75em;color:var(--muted);margin-top:3px}
+
+/* ═══ MAIN ═══ */
+.main{margin-left:var(--sw);min-height:100vh}
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,9,13,.88);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border-bottom:1px solid var(--border);padding:16px 36px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.topbar-title{font-family:var(--font-display);font-size:1.35em;font-weight:800}
+.topbar-sub{font-size:0.78em;color:var(--muted)}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;
+  font-size:0.86em;font-weight:600;cursor:pointer;border:none;
+  transition:all .18s ease;font-family:var(--font-body);white-space:nowrap;
+}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#d6ec30;transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,255,71,.25)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2);background:var(--surface3)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-warn{background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.25)}
+.btn-warn:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn-sm{padding:6px 13px;font-size:0.8em}
+.btn-icon{padding:7px;width:32px;height:32px;justify-content:center;border-radius:7px}
+
+/* ═══ PAGE ═══ */
+.page{display:none;padding:32px 36px;animation:fadeUp .28s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ STATS ═══ */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat:hover{border-color:var(--border2)}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.s1::after{background:var(--accent)}.stat.s2::after{background:var(--accent2)}
+.stat.s3::after{background:var(--green)}.stat.s4::after{background:var(--purple)}
+.stat-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.stat-ico{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1em}
+.ic-y{background:rgba(232,255,71,.1);color:var(--accent)}
+.ic-b{background:rgba(59,130,246,.1);color:var(--accent2)}
+.ic-g{background:rgba(34,197,94,.1);color:var(--green)}
+.ic-p{background:rgba(168,85,247,.1);color:var(--purple)}
+.stat-num{font-family:var(--font-display);font-size:2em;font-weight:800;line-height:1}
+.stat-lbl{font-size:0.78em;color:var(--muted);margin-top:5px}
+
+/* ═══ SEC HEADER ═══ */
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.sec-title{font-family:var(--font-display);font-size:1.15em;font-weight:800}
+.sec-sub{font-size:0.78em;color:var(--muted);margin-top:2px}
+
+/* ═══ CAR CARDS ═══ */
+.fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.car-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .22s ease}
+.car-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.car-visual{height:160px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.car-visual.sedan{background:linear-gradient(135deg,#161d2e,#1f2d4a)}
+.car-visual.suv{background:linear-gradient(135deg,#1c1430,#2a1a47)}
+.car-visual.luxury{background:linear-gradient(135deg,#151e15,#1e2e1e)}
+.car-visual.sports{background:linear-gradient(135deg,#2a1010,#3d1515)}
+.car-visual.van{background:linear-gradient(135deg,#0f1e28,#142433)}
+.car-emo{font-size:5em;filter:drop-shadow(0 6px 20px rgba(0,0,0,.6));transition:transform .3s ease}
+.car-card:hover .car-emo{transform:scale(1.1) translateY(-4px)}
+.car-status-badge{position:absolute;top:12px;right:12px;font-size:0.68em;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:20px}
+.bs-available{background:rgba(34,197,94,.2);color:var(--green);border:1px solid rgba(34,197,94,.35)}
+.bs-rented{background:rgba(249,115,22,.2);color:var(--orange);border:1px solid rgba(249,115,22,.35)}
+.bs-maintenance{background:rgba(239,68,68,.2);color:var(--red);border:1px solid rgba(239,68,68,.35)}
+.car-body{padding:18px}
+.car-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.car-name{font-family:var(--font-display);font-size:1em;font-weight:700}
+.car-plate{font-size:0.72em;font-weight:600;letter-spacing:.05em;background:var(--surface3);border:1px solid var(--border);padding:3px 8px;border-radius:5px;color:var(--muted)}
+.car-specs{display:flex;gap:0;margin:14px 0;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.spec-item{flex:1;text-align:center}
+.spec-item+.spec-item{border-left:1px solid var(--border)}
+.spec-v{font-size:0.9em;font-weight:700;color:var(--text)}
+.spec-k{font-size:0.67em;color:var(--muted);margin-top:2px}
+.car-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;min-height:22px}
+.tag{font-size:0.67em;padding:3px 8px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+.car-foot{display:flex;justify-content:space-between;align-items:center}
+.car-price{font-family:var(--font-display);font-weight:800;font-size:1.1em}
+.car-price small{font-size:0.6em;color:var(--muted);font-family:var(--font-body);font-weight:400}
+.car-btns{display:flex;gap:6px}
+
+/* ═══ TABLE ═══ */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.tbl-top{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.tbl-top-title{font-family:var(--font-display);font-size:0.95em;font-weight:700}
+table{width:100%;border-collapse:collapse}
+thead th{padding:12px 18px;text-align:left;font-size:0.69em;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2)}
+tbody td{padding:13px 18px;border-bottom:1px solid var(--border);font-size:0.87em;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ═══ MODAL ═══ */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:32px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;animation:fadeUp .22s ease}
+.modal.wide{max-width:660px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.modal-head h2{font-family:var(--font-display);font-size:1.2em;font-weight:800}
+.modal-close{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;cursor:pointer;color:var(--muted);font-size:1em;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{color:var(--text);border-color:var(--border2)}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:0.72em;font-weight:700;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;text-transform:uppercase}
+input,select,textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:0.9em;font-family:var(--font-body);transition:border-color .18s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(232,255,71,.5);background:var(--surface3)}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+select option{background:var(--surface3)}
+textarea{resize:vertical;min-height:80px}
+input[disabled]{opacity:.45;cursor:not-allowed}
+.form-actions{display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.msg{margin-top:12px;padding:11px 15px;border-radius:8px;font-size:0.84em;display:none}
+.msg.show{display:block}
+.msg.ok{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.msg.err{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+
+/* ═══ CONFIRM DIALOG ═══ */
+#cf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);z-index:800;align-items:center;justify-content:center}
+#cf-overlay.open{display:flex}
+.cf-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:30px;width:90%;max-width:380px;text-align:center;animation:fadeUp .2s ease}
+.cf-icon{font-size:2.8em;margin-bottom:12px}
+.cf-title{font-family:var(--font-display);font-size:1.1em;font-weight:800;margin-bottom:8px}
+.cf-text{font-size:0.84em;color:var(--muted);line-height:1.6;margin-bottom:22px}
+.cf-btns{display:flex;gap:10px;justify-content:center}
+
+/* ═══ TOAST ═══ */
+#toast-wrap{position:fixed;bottom:24px;right:24px;z-index:900;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border2);border-radius:11px;padding:13px 18px;font-size:0.87em;font-weight:500;min-width:270px;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.ok{border-left:3px solid var(--green)}.toast.ok i{color:var(--green)}
+.toast.err{border-left:3px solid var(--red)}.toast.err i{color:var(--red)}
+
+/* ═══ REPORTS ═══ */
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px}
+.report-card h4{font-family:var(--font-display);font-weight:800;margin-bottom:6px;font-size:1em}
+.report-card p{font-size:0.8em;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.prog-label{font-size:0.8em;color:var(--muted)}
+.prog-val{font-size:0.8em;font-weight:700}
+.prog-bar{height:5px;background:var(--surface2);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .7s ease}
+
+/* ═══ INFO BOX ═══ */
+.info-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;font-size:0.82em;color:var(--muted);margin-bottom:4px;display:flex;align-items:flex-start;gap:8px}
+
+/* ═══ EMPTY ═══ */
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty i{font-size:2.8em;margin-bottom:14px;opacity:.2;display:block}
+.empty p{font-size:0.88em}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ═══ LOGIN PAGE ═══ */
+#login-screen{display:flex;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:420px;animation:fadeUp .3s ease}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.login-logo-mark{width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.login-logo-mark i{color:#000;font-size:1.2em}
+.login-title{font-family:var(--font-display);font-size:1.4em;font-weight:800}
+.login-title b{color:var(--accent)}
+.login-sub{text-align:center;font-size:.82em;color:var(--muted);margin-bottom:28px}
+.login-footer{margin-top:20px;text-align:center;font-size:.75em;color:var(--muted)}
+/* ═══ TOPBAR USER ═══ */
+.topbar-user{display:flex;align-items:center;gap:10px}
+.user-badge{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;font-size:.84em}
+.role-tag{font-size:.7em;padding:2px 7px;border-radius:20px;font-weight:700}
+.role-admin{background:rgba(232,255,71,.15);color:var(--accent)}
+.role-staff{background:rgba(59,130,246,.15);color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark"><i class="fas fa-car"></i></div>
+      <div class="login-title">Car<b>Rent</b> Pro</div>
+    </div>
+    <div class="login-sub">Đăng nhập để quản lý hệ thống cho thuê xe</div>
+    <div class="form-group"><label>Username</label><input id="lg-user" placeholder="admin" autocomplete="username"></div>
+    <div class="form-group"><label>Password</label><input id="lg-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <div class="form-actions" style="margin-top:8px;padding-top:0;border-top:none">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()">
+        <i class="fas fa-right-to-bracket"></i> Đăng Nhập
+      </button>
+    </div>
+    <div class="msg" id="msg-login"></div>
+    <div class="login-footer">Tài khoản mặc định: <strong>admin</strong> / <strong>admin123</strong></div>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark"><i class="fas fa-car"></i></div>
+    <div class="logo-text" style="white-space:nowrap">Car<b>Rent</b> Pro</div>
+  </div>
+  <div class="nav-section">Tổng quan</div>
+  <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)">
+    <i class="fas fa-chart-line"></i> Dashboard
+  </div>
+  <div class="nav-section">Quản lý</div>
+  <div class="nav-item" data-page="fleet" onclick="goPage('fleet',this)">
+    <i class="fas fa-car-side"></i> Quản Lý Xe
+  </div>
+  <div class="nav-item" data-page="bookings" onclick="goPage('bookings',this)">
+    <i class="fas fa-calendar-check"></i> Đơn Đặt Xe
+  </div>
+  <div class="nav-section">Phân tích</div>
+  <div class="nav-item" data-page="reports" onclick="goPage('reports',this)">
+    <i class="fas fa-chart-mixed"></i> Báo Cáo
+  </div>
+  <div class="sidebar-clock">
+    <div class="clock-time" id="clock">--:--</div>
+    <div class="clock-date" id="clkdate">--</div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="pg-title">Dashboard</div>
+      <div class="topbar-sub" id="pg-sub">Xin chào, hôm nay là ngày tốt để kinh doanh 🚗</div>
+    </div>
+    <div class="topbar-user">
+      <div class="user-badge">
+        <i class="fas fa-user-circle"></i>
+        <span id="topbar-username">—</span>
+        <span class="role-tag" id="topbar-role"></span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i> Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-row">
+      <div class="stat s1"><div class="stat-head"><div class="stat-ico ic-y"><i class="fas fa-car"></i></div></div><div class="stat-num" id="st-total">0</div><div class="stat-lbl">Tổng số xe</div></div>
+      <div class="stat s2"><div class="stat-head"><div class="stat-ico ic-b"><i class="fas fa-calendar-check"></i></div></div><div class="stat-num" id="st-bookings">0</div><div class="stat-lbl">Tổng đơn đặt</div></div>
+      <div class="stat s3"><div class="stat-head"><div class="stat-ico ic-g"><i class="fas fa-circle-check"></i></div></div><div class="stat-num" id="st-avail">0</div><div class="stat-lbl">Xe sẵn có</div></div>
+      <div class="stat s4"><div class="stat-head"><div class="stat-ico ic-p"><i class="fas fa-coins"></i></div></div><div class="stat-num" id="st-revenue" style="font-size:1.1em">₫0</div><div class="stat-lbl">Tổng doanh thu</div></div>
+    </div>
+    <div class="sec-head">
+      <div><div class="sec-title">Xe nổi bật</div><div class="sec-sub">3 xe gần nhất trong đội</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="goPage('fleet',document.querySelector('[data-page=fleet]'))">Xem tất cả <i class="fas fa-arrow-right"></i></button>
+    </div>
+    <div class="fleet-grid" id="dash-fleet"></div>
+  </div>
+
+  <!-- FLEET -->
+  <div class="page" id="page-fleet">
+    <div class="sec-head">
+      <div><div class="sec-title">Đội Xe</div><div class="sec-sub" id="fleet-sub">Đang tải...</div></div>
+      <button class="btn btn-primary" onclick="openAddCar()"><i class="fas fa-plus"></i> Thêm Xe Mới</button>
+    </div>
+    <div class="fleet-grid" id="fleet-grid"></div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="page" id="page-bookings">
+    <div class="sec-head">
+      <div><div class="sec-title">Quản Lý Đơn Đặt Xe</div><div class="sec-sub" id="bk-sub">Đang tải...</div></div>
+      <button class="btn btn-primary" onclick="openAddBooking()"><i class="fas fa-plus"></i> Tạo Đơn Đặt</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-top"><div class="tbl-top-title">Danh sách đơn đặt xe</div></div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Khách Hàng</th><th>Biển Số</th>
+            <th>Bắt Đầu</th><th>Kết Thúc</th><th>Ngày Trả</th>
+            <th>Phí Trễ</th><th>Tổng Tiền</th><th>Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="bk-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="sec-head">
+      <div><div class="sec-title">Báo Cáo & Thống Kê</div><div class="sec-sub">Tổng quan hoạt động kinh doanh</div></div>
+    </div>
+    <div class="report-grid">
+      <div class="report-card"><div style="font-size:1.8em;margin-bottom:12px">🚗</div><h4>Tình Trạng Đội Xe</h4><p>Phân loại xe theo trạng thái hiện tại</p><div id="rpt-fleet"></div></div>
+      <div class="report-card"><div style="font-size:1.8em;margin-bottom:12px">💰</div><h4>Doanh Thu Tổng</h4><p>Tổng hợp từ tất cả đơn đặt xe</p><div id="rpt-revenue" style="font-family:var(--font-display);font-size:2.4em;font-weight:800;color:var(--accent);margin:12px 0">₫0</div><div style="font-size:.78em;color:var(--muted)">Tính từ tất cả đơn đặt</div></div>
+      <div class="report-card"><div style="font-size:1.8em;margin-bottom:12px">📋</div><h4>Phân Tích Đơn Đặt</h4><p>Tổng quan các đơn đặt xe trong hệ thống</p><div id="rpt-bookings"></div></div>
+      <div class="report-card"><div style="font-size:1.8em;margin-bottom:12px">⭐</div><h4>Xe Phổ Biến Nhất</h4><p>Những chiếc xe được đặt thuê nhiều nhất</p><div id="rpt-popular"></div></div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ TOAST ══ -->
+<div id="toast-wrap"></div>
+
+<!-- ══ CONFIRM DIALOG ══ -->
+<div id="cf-overlay">
+  <div class="cf-box">
+    <div class="cf-icon" id="cf-icon">⚠️</div>
+    <div class="cf-title" id="cf-title">Xác nhận</div>
+    <div class="cf-text" id="cf-text">Bạn có chắc chắn không?</div>
+    <div class="cf-btns">
+      <button class="btn btn-ghost" onclick="cfDone(false)">Hủy</button>
+      <button class="btn btn-danger" id="cf-ok-btn" onclick="cfDone(true)">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: THÊM XE ══ -->
+<div class="overlay" id="ov-addcar">
+  <div class="modal">
+    <div class="modal-head">
+      <h2><i class="fas fa-plus" style="color:var(--accent);margin-right:8px"></i>Thêm Xe Mới</h2>
+      <button class="modal-close" onclick="closeOv('ov-addcar')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Biển Số Xe *</label><input id="ac-plate" placeholder="51A-12345" autocomplete="off"></div>
+      <div class="form-group"><label>Loại Xe</label>
+        <select id="ac-type">
+          <option value="sedan">🚗 Sedan</option><option value="suv">🚙 SUV</option>
+          <option value="luxury">🏎️ Luxury</option><option value="sports">🏎️ Sports</option><option value="van">🚐 Van / Minibus</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Số Chỗ Ngồi *</label><input id="ac-seats" type="number" placeholder="5" min="1"></div>
+      <div class="form-group"><label>Giá / Ngày (₫) *</label><input id="ac-price" type="number" placeholder="500000" min="0"></div>
+    </div>
+    <div class="form-group"><label>Trạng Thái</label>
+      <select id="ac-status">
+        <option value="available">✅ Sẵn Có</option><option value="rented">🔄 Đang Cho Thuê</option><option value="maintenance">🔧 Bảo Trì</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Tính Năng (phân cách bằng dấu phẩy)</label><input id="ac-features" placeholder="Tự động, Điều hoà, GPS, Camera 360°"></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveCar()"><i class="fas fa-save"></i> Lưu Xe</button>
+      <button class="btn btn-ghost" onclick="closeOv('ov-addcar')">Hủy</button>
+    </div>
+    <div class="msg" id="msg-addcar"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: SỬA XE ══ -->
+<div class="overlay" id="ov-editcar">
+  <div class="modal">
+    <div class="modal-head">
+      <h2><i class="fas fa-pen" style="color:var(--orange);margin-right:8px"></i>Sửa Thông Tin Xe</h2>
+      <button class="modal-close" onclick="closeOv('ov-editcar')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Biển Số Xe (không thể sửa)</label><input id="ec-plate" disabled></div>
+      <div class="form-group"><label>Loại Xe</label>
+        <select id="ec-type">
+          <option value="sedan">🚗 Sedan</option><option value="suv">🚙 SUV</option>
+          <option value="luxury">🏎️ Luxury</option><option value="sports">🏎️ Sports</option><option value="van">🚐 Van / Minibus</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Số Chỗ Ngồi *</label><input id="ec-seats" type="number" min="1"></div>
+      <div class="form-group"><label>Giá / Ngày (₫) *</label><input id="ec-price" type="number" min="0"></div>
+    </div>
+    <div class="form-group"><label>Trạng Thái</label>
+      <select id="ec-status">
+        <option value="available">✅ Sẵn Có</option><option value="rented">🔄 Đang Cho Thuê</option><option value="maintenance">🔧 Bảo Trì</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Tính Năng</label><input id="ec-features" placeholder="Tự động, Điều hoà, GPS..."></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="updateCar()"><i class="fas fa-save"></i> Cập Nhật</button>
+      <button class="btn btn-ghost" onclick="closeOv('ov-editcar')">Hủy</button>
+    </div>
+    <div class="msg" id="msg-editcar"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: TẠO ĐƠN ĐẶT ══ -->
+<div class="overlay" id="ov-addbooking">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h2><i class="fas fa-calendar-plus" style="color:var(--accent);margin-right:8px"></i>Tạo Đơn Đặt Xe</h2>
+      <button class="modal-close" onclick="closeOv('ov-addbooking')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="form-group"><label>Tên Khách Hàng *</label><input id="ab-name" placeholder="Nguyễn Văn A"></div>
+
+    <div class="form-group">
+      <label>Chọn Xe *</label>
+      <div id="ab-car-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:240px;overflow-y:auto;padding:2px 2px 4px"></div>
+      <input type="hidden" id="ab-plate">
+    </div>
+
+    <div id="ab-car-preview" style="display:none;background:var(--surface2);border:1px solid rgba(232,255,71,.3);border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="font-size:.72em;font-weight:700;color:var(--accent);letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px"><i class="fas fa-circle-check"></i> Xe đã chọn</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="ab-prev-emo" style="font-size:2.4em;line-height:1"></div>
+        <div>
+          <div id="ab-prev-name" style="font-family:var(--font-display);font-weight:700;font-size:.95em"></div>
+          <div id="ab-prev-plate" style="font-size:.75em;color:var(--muted);margin-top:2px"></div>
+          <div id="ab-prev-price" style="font-size:.82em;color:var(--accent);font-weight:600;margin-top:3px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Ngày Bắt Đầu *</label><input id="ab-start" type="datetime-local"></div>
+      <div class="form-group"><label>Ngày Kết Thúc *</label><input id="ab-end" type="datetime-local"></div>
+    </div>
+
+    <div id="ab-cost-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="font-size:.72em;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Dự tính chi phí</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.85em;color:var(--muted)" id="ab-cost-detail"></span>
+        <span style="font-family:var(--font-display);font-size:1.3em;font-weight:800;color:var(--accent)" id="ab-cost-total">₫0</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="saveBooking()"><i class="fas fa-calendar-plus"></i> Tạo Đơn</button>
+      <button class="btn btn-ghost" onclick="closeOv('ov-addbooking')">Hủy</button>
+    </div>
+    <div class="msg" id="msg-addbooking"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: SỬA ĐƠN ĐẶT ══ -->
+<div class="overlay" id="ov-editbooking">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h2><i class="fas fa-pen" style="color:var(--orange);margin-right:8px"></i>Sửa Đơn Đặt Xe</h2>
+      <button class="modal-close" onclick="closeOv('ov-editbooking')"><i class="fas fa-times"></i></button>
+    </div>
+    <input type="hidden" id="eb-id">
+    <div class="form-row">
+      <div class="form-group"><label>Tên Khách Hàng *</label><input id="eb-name" placeholder="Nguyễn Văn A"></div>
+      <div class="form-group"><label>Biển Số Xe</label><input id="eb-plate" disabled></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ngày Bắt Đầu</label><input id="eb-start" type="datetime-local"></div>
+      <div class="form-group"><label>Ngày Kết Thúc</label><input id="eb-end" type="datetime-local"></div>
+    </div>
+    <div style="background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:.75em;font-weight:700;color:var(--orange);letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px">
+        <i class="fas fa-car-rear"></i> Trả Xe & Phí Trễ Hạn
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0"><label>Ngày Trả Thực Tế</label><input id="eb-return" type="datetime-local"></div>
+        <div class="form-group" style="margin-bottom:0"><label>Phí Trễ / Ngày (₫)</label><input id="eb-latefee" type="number" placeholder="0" min="0"></div>
+      </div>
+      <div style="margin-top:10px;font-size:.78em;color:var(--muted)">
+        Nếu ngày trả muộn hơn ngày kết thúc → Phí trễ = số ngày trễ × phí trễ/ngày
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="updateBooking()"><i class="fas fa-save"></i> Cập Nhật</button>
+      <button class="btn btn-ghost" onclick="closeOv('ov-editbooking')">Hủy</button>
+    </div>
+    <div class="msg" id="msg-editbooking"></div>
+  </div>
+</div>
+
+<script>
+// ══ AUTH STATE ══
+let AUTH = { token: null, user: null };
+
+function getToken()  { return AUTH.token || localStorage.getItem('cr_token'); }
+function getUser()   { try { return AUTH.user || JSON.parse(localStorage.getItem('cr_user')); } catch(e){ return null; } }
+function saveAuth(token, user) {
+  AUTH.token = token; AUTH.user = user;
+  localStorage.setItem('cr_token', token);
+  localStorage.setItem('cr_user', JSON.stringify(user));
+}
+function clearAuth() {
+  AUTH = { token: null, user: null };
+  localStorage.removeItem('cr_token');
+  localStorage.removeItem('cr_user');
+}
+
+// ── Kiểm tra login khi tải trang ──
+window.addEventListener('DOMContentLoaded', () => {
+  const token = getToken();
+  const user  = getUser();
+  if (token && user) {
+    showApp(user);
+  } else {
+    showLoginScreen();
+  }
+  // Attach date change listeners
+  ['ab-start','ab-end'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', updateCostPreview);
+  });
+});
+
+function showLoginScreen() {
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+function showApp(user) {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('topbar-username').textContent = user.username;
+  const roleEl = document.getElementById('topbar-role');
+  roleEl.textContent = user.role === 'admin' ? 'Admin' : 'Staff';
+  roleEl.className = 'role-tag ' + (user.role === 'admin' ? 'role-admin' : 'role-staff');
+  loadDashboard();
+}
+
+// ── Đăng nhập ──
+async function doLogin() {
+  const username = document.getElementById('lg-user').value.trim();
+  const password = document.getElementById('lg-pass').value;
+  if (!username || !password) { setMsg('msg-login','⚠️ Nhập đầy đủ username và password',false); return; }
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await res.json();
+    if (d.success) {
+      saveAuth(d.token, d.user);
+      showApp(d.user);
+      document.getElementById('lg-pass').value = '';
+    } else {
+      setMsg('msg-login', '❌ ' + d.message, false);
+    }
+  } catch(e) {
+    setMsg('msg-login', '❌ Không kết nối được server', false);
+  }
+}
+// Cho phép nhấn Enter để login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('login-screen').classList.contains('hidden')) {
+    doLogin();
+  }
+});
+
+// ── Đăng xuất ──
+function doLogout() {
+  clearAuth();
+  showLoginScreen();
+  toast('Đã đăng xuất thành công.');
+}
+// ══ LOCAL DATA STORE ══
+let DB = {
+  cars: [
+    {carNumber:'51A-12345',capacity:5,status:'available',pricePerDay:600000,features:['Tự động','Điều hoà','GPS'],type:'sedan'},
+    {carNumber:'51B-67890',capacity:7,status:'rented',pricePerDay:900000,features:['Tự động','Camera 360°','Cửa điện'],type:'suv'},
+    {carNumber:'51C-11111',capacity:4,status:'available',pricePerDay:2000000,features:['Tự động','Da thật','Panoramic','HUD'],type:'luxury'},
+    {carNumber:'51D-22222',capacity:2,status:'maintenance',pricePerDay:1500000,features:['Tự động','Turbo','Sport Mode'],type:'sports'},
+    {carNumber:'51E-33333',capacity:16,status:'available',pricePerDay:1200000,features:['Tự động','Điều hoà','USB','Wifi'],type:'van'},
+    {carNumber:'51F-44444',capacity:5,status:'available',pricePerDay:700000,features:['Số sàn','Điều hoà','ABS'],type:'sedan'},
+  ],
+  bookings: [
+    {_id:'bk1',customerName:'Nguyễn Văn A',carNumber:'51B-67890',startDate:'2026-03-01T08:00',endDate:'2026-03-05T08:00',returnDate:null,extraCharge:0,totalAmount:3600000},
+    {_id:'bk2',customerName:'Trần Thị B',carNumber:'51A-12345',startDate:'2026-03-06T10:00',endDate:'2026-03-08T10:00',returnDate:'2026-03-09T12:00',extraCharge:600000,totalAmount:1800000},
+    {_id:'bk3',customerName:'Lê Minh Tuấn',carNumber:'51F-44444',startDate:'2026-02-20T09:00',endDate:'2026-02-25T09:00',returnDate:'2026-02-25T09:00',extraCharge:0,totalAmount:3500000},
+  ],
+  useApi: false
+};
+
+// ══ CLOCK ══
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('clkdate').textContent=n.toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+tick(); setInterval(tick,1000);
+
+// ══ NAVIGATION ══
+const META={
+  dashboard:{title:'Dashboard',sub:'Xin chào, hôm nay là ngày tốt để kinh doanh 🚗'},
+  fleet:{title:'Quản Lý Xe',sub:'Thêm, sửa, xóa và theo dõi toàn bộ xe trong đội'},
+  bookings:{title:'Quản Lý Đơn Đặt Xe',sub:'Tạo, sửa và quản lý tất cả đơn thuê xe'},
+  reports:{title:'Báo Cáo & Thống Kê',sub:'Phân tích hiệu suất hoạt động kinh doanh'},
+};
+function goPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('pg-title').textContent=META[id].title;
+  document.getElementById('pg-sub').textContent=META[id].sub;
+  if(id==='dashboard') loadDashboard();
+  if(id==='fleet') loadFleet();
+  if(id==='bookings') loadBookings();
+  if(id==='reports') loadReports();
+}
+
+// ══ TOAST ══
+function toast(msg,type='ok'){
+  const w=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  el.innerHTML=`<i class="fas fa-${type==='ok'?'circle-check':'circle-xmark'}"></i><span>${msg}</span>`;
+  w.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(120%)';el.style.transition='all .3s';setTimeout(()=>el.remove(),300);},3000);
+}
+
+// ══ CONFIRM ══
+let _cfDone=null;
+function confirm2(title,text,icon='⚠️',okLabel='Xác nhận',okClass='btn-danger'){
+  return new Promise(res=>{
+    document.getElementById('cf-icon').textContent=icon;
+    document.getElementById('cf-title').textContent=title;
+    document.getElementById('cf-text').textContent=text;
+    const btn=document.getElementById('cf-ok-btn');
+    btn.textContent=okLabel; btn.className='btn '+okClass;
+    document.getElementById('cf-overlay').classList.add('open');
+    _cfDone=v=>{document.getElementById('cf-overlay').classList.remove('open');res(v);};
+  });
+}
+function cfDone(v){ if(_cfDone){_cfDone(v);_cfDone=null;} }
+
+// ══ OVERLAY HELPERS ══
+function openOv(id){document.getElementById(id).classList.add('open');}
+function closeOv(id){
+  document.getElementById(id).classList.remove('open');
+  const m=document.querySelector('#'+id+' .msg');
+  if(m){m.className='msg';m.textContent='';}
+}
+window.addEventListener('click',e=>{
+  document.querySelectorAll('.overlay').forEach(o=>{if(e.target===o)o.classList.remove('open');});
+});
+
+// ══ FORM HELPERS ══
+function v(id){return document.getElementById(id).value;}
+function setMsg(id,text,ok){const el=document.getElementById(id);el.textContent=text;el.className='msg show '+(ok?'ok':'err');}
+
+// ══ API — tự động gắn JWT ══
+async function apiCall(method, path, body=null){
+  const token = getToken();
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  // Token hết hạn → tự logout
+  if (r.status === 401 || r.status === 403) {
+    const d = await r.json();
+    // Chỉ logout nếu là lỗi token (không phải lỗi phân quyền tính năng)
+    if (d.message && (d.message.includes('token') || d.message.includes('đăng nhập'))) {
+      toast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'err');
+      clearAuth(); showLoginScreen();
+    }
+    return d;
+  }
+  return r.json();
+}
+
+// ══ DATA ══
+async function getCars(){
+  try{const d=await apiCall('GET','/api/cars');if(d.success&&d.data){DB.cars=d.data;DB.useApi=true;return d.data;}}catch(e){}
+  return DB.cars;
+}
+async function getBookings(){
+  try{const d=await apiCall('GET','/api/bookings');if(d.success&&d.data){DB.bookings=d.data;return d.data;}}catch(e){}
+  return DB.bookings;
+}
+
+// ══ CAR MAPS ══
+const CE={sedan:'🚗',suv:'🚙',luxury:'🏎️',sports:'🏎️',van:'🚐'};
+const CN={sedan:'Sedan',suv:'SUV Cao Cấp',luxury:'Luxury Premium',sports:'Sports Car',van:'Van / Minibus'};
+const SL={available:'Sẵn Có',rented:'Đang Thuê',maintenance:'Bảo Trì'};
+const SC={available:'bs-available',rented:'bs-rented',maintenance:'bs-maintenance'};
+
+function carCard(car,btns=true){
+  const t=car.type||'sedan';
+  const tags=(car.features||[]).slice(0,3).map(f=>`<span class="tag">${f}</span>`).join('');
+  const bHTML=btns?`<div class="car-btns">
+    <button class="btn btn-warn btn-icon" title="Sửa xe" onclick="event.stopPropagation();openEditCar('${car.carNumber}')"><i class="fas fa-pen"></i></button>
+    <button class="btn btn-danger btn-icon" title="Xóa xe" onclick="event.stopPropagation();deleteCar('${car.carNumber}')"><i class="fas fa-trash"></i></button>
+  </div>`:'';
+  return `<div class="car-card">
+    <div class="car-visual ${t}">
+      <div class="car-emo">${CE[t]||'🚗'}</div>
+      <div class="car-status-badge ${SC[car.status]||'bs-available'}">${SL[car.status]||car.status}</div>
+    </div>
+    <div class="car-body">
+      <div class="car-top"><div class="car-name">${CN[t]||t}</div><div class="car-plate">${car.carNumber}</div></div>
+      <div class="car-specs">
+        <div class="spec-item"><div class="spec-v">${car.capacity}</div><div class="spec-k">Chỗ ngồi</div></div>
+        <div class="spec-item"><div class="spec-v">${(car.pricePerDay/1000).toFixed(0)}K</div><div class="spec-k">₫/ngày</div></div>
+        <div class="spec-item"><div class="spec-v">2024</div><div class="spec-k">Năm SX</div></div>
+      </div>
+      <div class="car-tags">${tags||'<span class="tag" style="opacity:.4">Chưa có tính năng</span>'}</div>
+      <div class="car-foot"><div class="car-price">₫${car.pricePerDay.toLocaleString('vi-VN')}<small>/ngày</small></div>${bHTML}</div>
+    </div>
+  </div>`;
+}
+
+// ══ DASHBOARD ══
+async function loadDashboard(){
+  const [cars,bookings]=await Promise.all([getCars(),getBookings()]);
+  document.getElementById('st-total').textContent=cars.length;
+  document.getElementById('st-bookings').textContent=bookings.length;
+  document.getElementById('st-avail').textContent=cars.filter(c=>c.status==='available').length;
+  const rev=bookings.reduce((s,b)=>s+(b.totalAmount||0),0);
+  document.getElementById('st-revenue').textContent='₫'+fmtShort(rev);
+  const g=document.getElementById('dash-fleet');
+  if(!cars.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="fas fa-car-side"></i><p>Chưa có xe nào</p></div>';return;}
+  g.innerHTML=cars.slice(0,3).map(c=>carCard(c,false)).join('');
+}
+
+// ══ FLEET ══
+async function loadFleet(){
+  const cars=await getCars();
+  document.getElementById('fleet-sub').textContent=`${cars.length} xe trong đội · ${cars.filter(c=>c.status==='available').length} sẵn sàng`;
+  const g=document.getElementById('fleet-grid');
+  if(!cars.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="fas fa-inbox"></i><p>Chưa có xe. Nhấn "Thêm Xe Mới" để bắt đầu.</p></div>';return;}
+  g.innerHTML=cars.map(c=>carCard(c,true)).join('');
+}
+
+// ══ THÊM XE ══
+function openAddCar(){
+  ['ac-plate','ac-seats','ac-price','ac-features'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ac-status').value='available';
+  document.getElementById('ac-type').value='sedan';
+  openOv('ov-addcar');
+}
+async function saveCar(){
+  const plate=v('ac-plate').trim(), seats=parseInt(v('ac-seats')), price=parseFloat(v('ac-price'));
+  if(!plate){setMsg('msg-addcar','⚠️ Vui lòng nhập biển số xe',false);return;}
+  if(!seats||seats<1){setMsg('msg-addcar','⚠️ Số chỗ ngồi không hợp lệ',false);return;}
+  if(!price||price<0){setMsg('msg-addcar','⚠️ Giá thuê không hợp lệ',false);return;}
+  const car={carNumber:plate,capacity:seats,pricePerDay:price,status:v('ac-status'),type:v('ac-type'),features:v('ac-features').split(',').map(s=>s.trim()).filter(Boolean)};
+  try{
+    const d=await apiCall('POST','/api/cars',car);
+    if(d.success){toast('Đã thêm xe '+plate+' thành công!');closeOv('ov-addcar');loadFleet();loadDashboard();return;}
+    setMsg('msg-addcar','❌ '+d.message,false);return;
+  }catch(e){}
+  if(DB.cars.find(c=>c.carNumber===plate)){setMsg('msg-addcar','⚠️ Biển số xe đã tồn tại',false);return;}
+  DB.cars.push(car);
+  toast('Đã thêm xe '+plate+' thành công!');
+  closeOv('ov-addcar');loadFleet();loadDashboard();
+}
+
+// ══ SỬA XE ══
+async function openEditCar(plate){
+  let car=DB.cars.find(c=>c.carNumber===plate);
+  try{const d=await apiCall('GET','/api/cars/'+plate);if(d.success)car=d.data;}catch(e){}
+  if(!car){toast('Không tìm thấy xe','err');return;}
+  document.getElementById('ec-plate').value=car.carNumber;
+  document.getElementById('ec-seats').value=car.capacity;
+  document.getElementById('ec-price').value=car.pricePerDay;
+  document.getElementById('ec-status').value=car.status;
+  document.getElementById('ec-type').value=car.type||'sedan';
+  document.getElementById('ec-features').value=(car.features||[]).join(', ');
+  openOv('ov-editcar');
+}
+async function updateCar(){
+  const plate=v('ec-plate');
+  const seats=parseInt(v('ec-seats')), price=parseFloat(v('ec-price'));
+  if(!seats||seats<1){setMsg('msg-editcar','⚠️ Số chỗ ngồi không hợp lệ',false);return;}
+  if(!price||price<0){setMsg('msg-editcar','⚠️ Giá thuê không hợp lệ',false);return;}
+  const data={capacity:seats,pricePerDay:price,status:v('ec-status'),type:v('ec-type'),features:v('ec-features').split(',').map(s=>s.trim()).filter(Boolean)};
+  try{
+    const d=await apiCall('PUT','/api/cars/'+plate,data);
+    if(d.success){toast('Đã cập nhật xe '+plate);closeOv('ov-editcar');loadFleet();loadDashboard();return;}
+    setMsg('msg-editcar','❌ '+d.message,false);return;
+  }catch(e){}
+  const idx=DB.cars.findIndex(c=>c.carNumber===plate);
+  if(idx>=0) DB.cars[idx]={...DB.cars[idx],...data};
+  toast('Đã cập nhật xe '+plate);
+  closeOv('ov-editcar');loadFleet();loadDashboard();
+}
+
+// ══ XÓA XE ══
+async function deleteCar(plate){
+  const ok=await confirm2('Xóa Xe','Xóa xe '+plate+'? Hành động này không thể hoàn tác.','🗑️','Xóa Xe','btn-danger');
+  if(!ok)return;
+  try{
+    const d=await apiCall('DELETE','/api/cars/'+plate);
+    if(d.success){toast('Đã xóa xe '+plate);loadFleet();loadDashboard();return;}
+    toast('Lỗi: '+d.message,'err');return;
+  }catch(e){}
+  DB.cars=DB.cars.filter(c=>c.carNumber!==plate);
+  toast('Đã xóa xe '+plate);loadFleet();loadDashboard();
+}
+
+// ══ LOAD BOOKINGS ══
+async function loadBookings(){
+  const bookings=await getBookings();
+  document.getElementById('bk-sub').textContent=`${bookings.length} đơn đặt trong hệ thống`;
+  const tbody=document.getElementById('bk-tbody');
+  if(!bookings.length){
+    tbody.innerHTML='<tr><td colspan="9"><div class="empty"><i class="fas fa-inbox"></i><p>Chưa có đơn đặt xe nào. Nhấn "Tạo Đơn Đặt" để bắt đầu.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML=bookings.map((b,i)=>{
+    const sd=fmtDate(b.startDate), ed=fmtDate(b.endDate);
+    const rd=b.returnDate?`<span style="color:var(--green)">${fmtDate(b.returnDate)}</span>`:'<span style="color:var(--muted)">—</span>';
+    const ec=(b.extraCharge&&b.extraCharge>0)?`<span style="color:var(--orange);font-weight:600">₫${b.extraCharge.toLocaleString('vi-VN')}</span>`:'<span style="color:var(--muted)">₫0</span>';
+    return `<tr>
+      <td style="color:var(--muted);font-size:.8em">${i+1}</td>
+      <td><strong>${b.customerName}</strong></td>
+      <td><span class="car-plate" style="display:inline-block">${b.carNumber}</span></td>
+      <td style="font-size:.85em">${sd}</td><td style="font-size:.85em">${ed}</td><td style="font-size:.85em">${rd}</td>
+      <td>${ec}</td>
+      <td><strong style="color:var(--accent2)">₫${(b.totalAmount||0).toLocaleString('vi-VN')}</strong></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-warn btn-icon btn-sm" title="Sửa đơn / Trả xe" onclick="openEditBooking('${b._id}')"><i class="fas fa-pen"></i></button>
+        <button class="btn btn-danger btn-icon btn-sm" title="Xóa đơn" onclick="deleteBooking('${b._id}')"><i class="fas fa-trash"></i></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══ TẠO ĐƠN ĐẶT ══
+let _abSelectedCar = null;
+
+async function openAddBooking(){
+  _abSelectedCar = null;
+  ['ab-name','ab-start','ab-end'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ab-plate').value='';
+  document.getElementById('ab-car-preview').style.display='none';
+  document.getElementById('ab-cost-preview').style.display='none';
+
+  // Load available cars as selectable cards
+  const cars = await getCars();
+  const avail = cars.filter(c=>c.status==='available');
+  const list = document.getElementById('ab-car-list');
+  if(!avail.length){
+    list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:.85em"><i class="fas fa-ban" style="display:block;font-size:2em;margin-bottom:8px;opacity:.3"></i>Không có xe sẵn sàng để đặt</div>';
+  } else {
+    list.innerHTML = avail.map(car=>{
+      const t=car.type||'sedan';
+      const emo={sedan:'🚗',suv:'🚙',luxury:'🏎️',sports:'🏎️',van:'🚐'}[t]||'🚗';
+      const nm={sedan:'Sedan',suv:'SUV',luxury:'Luxury',sports:'Sports',van:'Van'}[t]||t;
+      return `<div class="ab-car-option" data-plate="${car.carNumber}" onclick="selectCar('${car.carNumber}')"
+        style="border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .18s;background:var(--surface2)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.8em;line-height:1">${emo}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:var(--font-display);font-weight:700;font-size:.88em">${nm}</div>
+            <div style="font-size:.72em;color:var(--muted)">${car.carNumber} · ${car.capacity} chỗ</div>
+            <div style="font-size:.78em;color:var(--accent);font-weight:600;margin-top:2px">₫${car.pricePerDay.toLocaleString('vi-VN')}/ngày</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  openOv('ov-addbooking');
+}
+
+function selectCar(plate){
+  const cars = DB.cars;
+  const car = cars.find(c=>c.carNumber===plate);
+  if(!car) return;
+  _abSelectedCar = car;
+  document.getElementById('ab-plate').value = plate;
+
+  // Highlight selected card
+  document.querySelectorAll('.ab-car-option').forEach(el=>{
+    const isMe = el.dataset.plate===plate;
+    el.style.border = isMe ? '1px solid var(--accent)' : '1px solid var(--border)';
+    el.style.background = isMe ? 'rgba(232,255,71,.08)' : 'var(--surface2)';
+  });
+
+  // Show preview
+  const t=car.type||'sedan';
+  const emo={sedan:'🚗',suv:'🚙',luxury:'🏎️',sports:'🏎️',van:'🚐'}[t]||'🚗';
+  const nm={sedan:'Sedan',suv:'SUV Cao Cấp',luxury:'Luxury Premium',sports:'Sports Car',van:'Van / Minibus'}[t]||t;
+  document.getElementById('ab-prev-emo').textContent=emo;
+  document.getElementById('ab-prev-name').textContent=nm;
+  document.getElementById('ab-prev-plate').textContent='Biển số: '+plate+' · '+car.capacity+' chỗ ngồi';
+  document.getElementById('ab-prev-price').textContent='₫'+car.pricePerDay.toLocaleString('vi-VN')+' / ngày';
+  document.getElementById('ab-car-preview').style.display='block';
+  updateCostPreview();
+}
+
+function updateCostPreview(){
+  if(!_abSelectedCar) return;
+  const start=document.getElementById('ab-start').value;
+  const end=document.getElementById('ab-end').value;
+  if(!start||!end||new Date(end)<=new Date(start)){
+    document.getElementById('ab-cost-preview').style.display='none'; return;
+  }
+  const days=Math.max(1,Math.ceil((new Date(end)-new Date(start))/86400000));
+  const total=_abSelectedCar.pricePerDay*days;
+  document.getElementById('ab-cost-detail').textContent=days+' ngày × ₫'+_abSelectedCar.pricePerDay.toLocaleString('vi-VN');
+  document.getElementById('ab-cost-total').textContent='₫'+total.toLocaleString('vi-VN');
+  document.getElementById('ab-cost-preview').style.display='block';
+}
+
+// Attach live update on date change — handled in auth DOMContentLoaded above
+
+async function saveBooking(){
+  const name=v('ab-name').trim(), plate=v('ab-plate').trim();
+  const start=v('ab-start'), end=v('ab-end');
+  if(!name){setMsg('msg-addbooking','⚠️ Vui lòng nhập tên khách hàng',false);return;}
+  if(!plate){setMsg('msg-addbooking','⚠️ Vui lòng chọn xe từ danh sách phía trên',false);return;}
+  if(!start||!end){setMsg('msg-addbooking','⚠️ Vui lòng chọn ngày bắt đầu và kết thúc',false);return;}
+  if(new Date(end)<=new Date(start)){setMsg('msg-addbooking','⚠️ Ngày kết thúc phải sau ngày bắt đầu',false);return;}
+  const body={customerName:name,carNumber:plate,startDate:new Date(start).toISOString(),endDate:new Date(end).toISOString()};
+  // -- Thử gọi API trước --
+  try{
+    const d=await apiCall('POST','/api/bookings',body);
+    if(d.success){
+      const days=d.data?.rentalDays||1, amt=d.data?.totalAmount||0;
+      toast(`Đặt xe thành công! ${days} ngày — ₫${amt.toLocaleString('vi-VN')}`);
+      closeOv('ov-addbooking');loadBookings();loadDashboard();return;
+    }
+    // API trả lỗi rõ ràng (xe không tồn tại, xe đang thuê, v.v.)
+    setMsg('msg-addbooking','❌ '+d.message,false);return;
+  }catch(e){
+    // Mất kết nối API → fallback local
+  }
+  // -- Fallback local: lấy xe từ API hoặc DB local --
+  let car=null;
+  try{const dc=await apiCall('GET','/api/cars/'+plate);if(dc.success)car=dc.data;}catch(e){}
+  if(!car) car=DB.cars.find(c=>c.carNumber===plate);
+  if(!car){setMsg('msg-addbooking','❌ Không tìm thấy xe biển số "'+plate+'". Vui lòng kiểm tra lại.','err');return;}
+  const days=Math.max(1,Math.ceil((new Date(end)-new Date(start))/86400000));
+  const total=car.pricePerDay*days;
+  DB.bookings.push({_id:'bk'+Date.now(),customerName:name,carNumber:plate,startDate:start,endDate:end,returnDate:null,extraCharge:0,totalAmount:total});
+  toast(`Đặt xe thành công! ${days} ngày — ₫${total.toLocaleString('vi-VN')}`);
+  closeOv('ov-addbooking');loadBookings();loadDashboard();
+}
+
+// ══ SỬA ĐƠN ĐẶT ══
+async function openEditBooking(id){
+  let bk=DB.bookings.find(b=>b._id===id);
+  try{const d=await apiCall('GET','/api/bookings/'+id);if(d.success)bk=d.data;}catch(e){}
+  if(!bk){toast('Không tìm thấy đơn đặt','err');return;}
+  document.getElementById('eb-id').value=bk._id;
+  document.getElementById('eb-name').value=bk.customerName;
+  document.getElementById('eb-plate').value=bk.carNumber;
+  document.getElementById('eb-start').value=toLocalDT(bk.startDate);
+  document.getElementById('eb-end').value=toLocalDT(bk.endDate);
+  document.getElementById('eb-return').value=bk.returnDate?toLocalDT(bk.returnDate):'';
+  document.getElementById('eb-latefee').value=bk.extraCharge||0;
+  openOv('ov-editbooking');
+}
+async function updateBooking(){
+  const id=v('eb-id'), name=v('eb-name').trim();
+  const start=v('eb-start'), end=v('eb-end');
+  const returnDate=v('eb-return'), lateFeePerDay=parseFloat(v('eb-latefee'))||0;
+  if(!name){setMsg('msg-editbooking','⚠️ Vui lòng nhập tên khách hàng',false);return;}
+  if(!start||!end){setMsg('msg-editbooking','⚠️ Vui lòng điền đầy đủ ngày',false);return;}
+  let extraCharge=0;
+  if(returnDate&&end){
+    const retDT=new Date(returnDate), endDT=new Date(end);
+    if(retDT>endDT){
+      const lateDays=Math.ceil((retDT-endDT)/86400000);
+      extraCharge=lateDays*lateFeePerDay;
+    }
+  }
+  const bk=DB.bookings.find(b=>b._id===id)||{};
+  const car=DB.cars.find(c=>c.carNumber===bk.carNumber)||{pricePerDay:0};
+  const days=Math.max(1,Math.ceil((new Date(end)-new Date(start))/86400000));
+  const total=car.pricePerDay*days+extraCharge;
+  const data={customerName:name,startDate:new Date(start).toISOString(),endDate:new Date(end).toISOString(),
+    returnDate:returnDate?new Date(returnDate).toISOString():null,extraCharge,totalAmount:total};
+  try{
+    const d=await apiCall('PUT','/api/bookings/'+id,data);
+    if(d.success){toast('Đã cập nhật đơn đặt xe thành công');closeOv('ov-editbooking');loadBookings();loadDashboard();return;}
+    setMsg('msg-editbooking','❌ '+d.message,false);return;
+  }catch(e){}
+  const idx=DB.bookings.findIndex(b=>b._id===id);
+  if(idx>=0) DB.bookings[idx]={...DB.bookings[idx],...data};
+  toast('Đã cập nhật đơn đặt xe thành công');
+  closeOv('ov-editbooking');loadBookings();loadDashboard();
+}
+
+// ══ XÓA ĐƠN ĐẶT ══
+async function deleteBooking(id){
+  const bk=DB.bookings.find(b=>b._id===id)||{};
+  const ok=await confirm2('Xóa Đơn Đặt',`Xóa đơn của "${bk.customerName}" — xe ${bk.carNumber}?`,'🗑️','Xóa','btn-danger');
+  if(!ok)return;
+  try{
+    const d=await apiCall('DELETE','/api/bookings/'+id);
+    if(d.success){toast('Đã xóa đơn đặt xe');loadBookings();loadDashboard();return;}
+    toast('Lỗi: '+d.message,'err');return;
+  }catch(e){}
+  DB.bookings=DB.bookings.filter(b=>b._id!==id);
+  toast('Đã xóa đơn đặt xe');loadBookings();loadDashboard();
+}
+
+// ══ REPORTS ══
+async function loadReports(){
+  const [cars,bookings]=await Promise.all([getCars(),getBookings()]);
+  const avail=cars.filter(c=>c.status==='available').length;
+  const rented=cars.filter(c=>c.status==='rented').length;
+  const maint=cars.filter(c=>c.status==='maintenance').length;
+  const total=cars.length||1;
+  document.getElementById('rpt-fleet').innerHTML=
+    progRow('Sẵn có',avail,total,'var(--green)')+
+    progRow('Đang thuê',rented,total,'var(--orange)')+
+    progRow('Bảo trì',maint,total,'var(--red)');
+  const rev=bookings.reduce((s,b)=>s+(b.totalAmount||0),0);
+  document.getElementById('rpt-revenue').textContent='₫'+rev.toLocaleString('vi-VN');
+  const extraTotal=bookings.reduce((s,b)=>s+(b.extraCharge||0),0);
+  const returned=bookings.filter(b=>b.returnDate).length;
+  document.getElementById('rpt-bookings').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+      ${kv('Tổng đơn đặt',bookings.length)}
+      ${kv('Đã trả xe',returned,'var(--green)')}
+      ${kv('Chưa trả',bookings.length-returned,'var(--orange)')}
+      ${kv('Tổng phí trễ hạn','₫'+extraTotal.toLocaleString('vi-VN'),'var(--red)')}
+    </div>`;
+  const cnt={};
+  bookings.forEach(b=>{cnt[b.carNumber]=(cnt[b.carNumber]||0)+1;});
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  document.getElementById('rpt-popular').innerHTML=sorted.length
+    ?sorted.map(([plate,n])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span class="car-plate" style="display:inline-block">${plate}</span><span style="font-size:.82em;color:var(--muted)">${n} lần đặt</span></div>`).join('')
+    :'<div style="color:var(--muted);font-size:.82em;margin-top:8px">Chưa có dữ liệu</div>';
+}
+function progRow(label,val,total,color){
+  const pct=total?Math.round(val/total*100):0;
+  return `<div class="prog-row"><span class="prog-label">${label}</span><span class="prog-val" style="color:${color}">${val} xe (${pct}%)</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>`;
+}
+function kv(k,val,c=''){
+  return `<div style="display:flex;justify-content:space-between"><span style="color:var(--muted);font-size:.82em">${k}</span><strong${c?` style="color:${c}"`:''}>${val}</strong></div>`;
+}
+
+// ══ UTILS ══
+function fmtDate(d){return d?new Date(d).toLocaleDateString('vi-VN'):'—';}
+function fmtShort(n){return n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n.toString();}
+function toLocalDT(iso){
+  if(!iso)return '';
+  const d=new Date(iso);
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// ══ INIT ══
+// Dashboard được load bởi showApp() sau khi xác thực thành công
+</script>
+</body>
+</html>
